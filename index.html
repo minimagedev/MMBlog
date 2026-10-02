@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MiniMage Linux — Technical Overview</title>
+  <meta
+    name="description"
+    content="MiniMage is a minimal Debian-derived Linux distribution built around OpenRC, the Mage package manager, reduced bloat, and user control."
+  >
+
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --panel: #111116;
+      --text: #e8e8ed;
+      --muted: #9999a5;
+      --border: #292932;
+      --accent: #a78bfa;
+      --accent-soft: #c4b5fd;
+      --code: #18181f;
+      --max-width: 900px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent-soft);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 90px 24px 70px;
+    }
+
+    header .inner,
+    main,
+    footer .inner {
+      width: min(var(--max-width), calc(100% - 48px));
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-family: monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+    }
+
+    .subtitle {
+      max-width: 700px;
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 1.25rem;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 60px 0 100px;
+    }
+
+    section {
+      padding: 38px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 1.8rem;
+      letter-spacing: -0.025em;
+    }
+
+    h3 {
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0 0 18px;
+    }
+
+    strong {
+      color: #fff;
+    }
+
+    code {
+      padding: 3px 7px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--code);
+      color: var(--accent-soft);
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.9em;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--code);
+      line-height: 1.6;
+    }
+
+    pre code {
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    blockquote {
+      margin: 30px 0;
+      padding: 4px 0 4px 22px;
+      border-left: 3px solid var(--accent);
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    ul {
+      padding-left: 22px;
+    }
+
+    li {
+      margin: 7px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    .card {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .card span {
+      color: var(--muted);
+    }
+
+    .architecture {
+      margin: 25px 0;
+    }
+
+    .architecture pre {
+      margin: 0;
+    }
+
+    .warning {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .specs {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .specs div {
+      padding: 11px 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .specs div:nth-last-child(-n + 2) {
+      border-bottom: 0;
+    }
+
+    .spec-name {
+      color: var(--muted);
+      font-family: monospace;
+    }
+
+    footer {
+      padding: 45px 0;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    footer strong {
+      color: var(--text);
+    }
+
+    @media (max-width: 650px) {
+      header {
+        padding-top: 60px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .specs {
+        grid-template-columns: 1fr;
+      }
+
+      .spec-name {
+        padding-bottom: 0 !important;
+        border-bottom: 0 !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="inner">
+    <p class="eyebrow">MiniMage Project</p>
+
+    <h1>MiniMage</h1>
+
+    <p class="subtitle">
+      A minimal Debian-derived operating system built around efficiency,
+      transparency, OpenRC, Mage, and user control.
+    </p>
+
+    <span class="status">PRIVATE PRE-RELEASE DEVELOPMENT</span>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <h2>Overview</h2>
+
+    <p>
+      MiniMage is a lightweight Linux distribution designed to provide the
+      reliability and software compatibility of Debian without carrying the
+      full weight of a conventional general-purpose installation.
+    </p>
+
+    <p>
+      The project is built around three primary goals:
+      <strong>reduce unnecessary software, simplify system management,
+      and preserve user control.</strong>
+    </p>
+
+    <p>
+      MiniMage achieves this through a carefully reduced base system,
+      OpenRC service management, the <strong>Mage package manager</strong>,
+      a custom installation environment, and an image-building process
+      designed around producing small and reproducible systems.
+    </p>
+
+    <p>
+      Alongside the primary Linux edition, MiniMage is also being used as
+      an experimental platform for GNU Hurd.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>A Smaller Foundation</h2>
+
+    <p>
+      Conventional Linux distributions often install software for a wide
+      variety of potential use cases. This makes sense for systems intended
+      to work immediately for almost everyone, but it can also leave a
+      machine carrying packages and services it will never use.
+    </p>
+
+    <p>
+      MiniMage approaches the problem from the opposite direction.
+    </p>
+
+    <blockquote>
+      Instead of asking what the user might need, MiniMage starts with what
+      the operating system actually requires.
+    </blockquote>
+
+    <p>
+      A base MiniMage installation does not require a desktop environment,
+      display manager, graphical application suite, development environment,
+      printing stack, or other optional subsystems.
+    </p>
+
+    <p>
+      Those components remain available. They simply aren't installed until
+      the user chooses them.
+    </p>
+
+    <p>
+      This reduces package count, disk usage, background services, update
+      surface, and overall system complexity.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>Smaller Installation Media</h2>
+
+    <p>
+      MiniMage's reduced package selection allows the project to produce a
+      substantially smaller installation image than a conventional
+      desktop-oriented distribution.
+    </p>
+
+    <p>
+      The image focuses on what is required to boot MiniMage, establish
+      networking, install the operating system, manage packages, and recover
+      the machine.
+    </p>
+
+    <p>
+      Large graphical environments and application collections are not
+      included simply because a user might eventually install them.
+    </p>
+
+    <p>
+      MiniMage does not treat ISO size as a competition. A smaller image is
+      instead a consequence of keeping the base system disciplined.
+    </p>
+
+    <blockquote>
+      Every component included by default should have a reason to be there.
+    </blockquote>
+  </section>
+
+
+  <section>
+    <h2>Debian Foundation</h2>
+
+    <p>
+      MiniMage uses Debian as its upstream software foundation.
+    </p>
+
+    <p>
+      This provides access to Debian's package ecosystem, the
+      <code>.deb</code> format, dpkg, mature dependency resolution,
+      hardware support, and existing software repositories.
+    </p>
+
+    <p>
+      MiniMage does not reproduce a normal Debian installation, however.
+      Its package manifests, OpenRC configuration, installer, service
+      defaults, boot environment, and system configuration are maintained
+      specifically for MiniMage.
+    </p>
+
+    <p>
+      Debian provides the foundation. MiniMage determines what gets built
+      on top of it.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>Mage Package Manager</h2>
+
+    <p>
+      <strong>Mage</strong> is MiniMage's primary package-management
+      interface.
+    </p>
+
+    <p>
+      Mage does not introduce an incompatible package format. MiniMage
+      remains based on Debian-compatible <code>.deb</code> packages and
+      uses the existing dpkg/APT infrastructure underneath.
+    </p>
+
+    <p>
+      Mage provides a cleaner MiniMage-specific interface above that
+      infrastructure.
+    </p>
+
+<pre><code>mage install firefox-esr
+mage remove firefox-esr
+mage search firefox
+mage update
+mage upgrade</code></pre>
+
+    <p>
+      Mage also provides a location for MiniMage-specific functionality
+      including repositories, system profiles, package groups, dependency
+      operations, and distribution packages.
+    </p>
+
+    <p>
+      Advanced users are not prevented from using APT or dpkg directly.
+      Mage is an additional system-management layer, not an attempt to hide
+      the underlying package system.
+    </p>
+
+    <div class="architecture">
+<pre><code>Mage
+  ↓
+APT / libapt
+  ↓
+dpkg
+  ↓
+.deb packages</code></pre>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>Mage Profiles</h2>
+
+    <p>
+      Mage profiles allow a minimal MiniMage installation to be expanded
+      into a specific type of machine without requiring those packages to
+      exist in the base image.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <strong>minimal</strong>
+        <span>Core MiniMage environment.</span>
+      </div>
+
+      <div class="card">
+        <strong>desktop</strong>
+        <span>Foundation for graphical workstations.</span>
+      </div>
+
+      <div class="card">
+        <strong>development</strong>
+        <span>Compilers and development tooling.</span>
+      </div>
+
+      <div class="card">
+        <strong>server</strong>
+        <span>Server-oriented system components.</span>
+      </div>
+    </div>
+
+    <p>
+      MiniMage therefore doesn't make useful software unavailable in the
+      name of minimalism. It makes that software optional.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>OpenRC</h2>
+
+    <p>
+      MiniMage uses <strong>OpenRC</strong> for initialization and service
+      management.
+    </p>
+
+    <p>
+      OpenRC fits MiniMage's preference for a relatively small, explicit,
+      and modular operating-system environment.
+    </p>
+
+<pre><code>rc-service sshd start
+rc-update add sshd default
+rc-status</code></pre>
+
+    <p>
+      MiniMage provides its own runlevel configuration and service defaults.
+      Only services required by the installed configuration are expected to
+      run automatically.
+    </p>
+
+    <p>
+      The project does not use OpenRC simply to position itself as
+      anti-systemd. OpenRC is used because its design fits MiniMage.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>Boot Architecture</h2>
+
+<pre><code>UEFI / BIOS
+     ↓
+ Bootloader
+     ↓
+ Linux kernel
+     ↓
+   initramfs
+     ↓
+    OpenRC
+     ↓
+MiniMage userspace
+     ↓
+     TTY</code></pre>
+
+    <p>
+      A base installation does not require a graphical login manager.
+      MiniMage boots into a normal TTY environment unless the user installs
+      and enables a graphical environment.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>The MiniMage Installer</h2>
+
+    <p>
+      MiniMage includes its own installation environment designed around
+      the distribution's minimal base system.
+    </p>
+
+    <p>The installer handles:</p>
+
+    <ul>
+      <li>disk preparation and filesystem creation</li>
+      <li>base-system deployment</li>
+      <li>user and hostname configuration</li>
+      <li>network configuration</li>
+      <li>OpenRC setup</li>
+      <li>bootloader installation</li>
+      <li>Mage configuration</li>
+      <li>repository initialization</li>
+      <li>MiniMage system configuration</li>
+    </ul>
+
+    <p>
+      The installer automates repetitive system construction without making
+      the resulting installation opaque.
+    </p>
+
+    <p>
+      After installation, the machine remains a normal Linux system that can
+      be inspected and modified directly.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>No Mandatory Desktop</h2>
+
+    <p>
+      MiniMage deliberately has no mandatory desktop environment.
+    </p>
+
+    <p>
+      A workstation may run XFCE or LXQt. A minimal machine may use DWM.
+      A Wayland system can use a compositor selected by the user. A server
+      can contain no graphical stack at all.
+    </p>
+
+    <p>
+      The graphical environment sits on top of MiniMage rather than defining
+      MiniMage itself.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>Reducing Bloat</h2>
+
+    <p>
+      MiniMage does not attempt to reduce bloat by rewriting every existing
+      Linux component.
+    </p>
+
+    <p>
+      Instead, it reduces complexity at the distribution level.
+    </p>
+
+    <ul>
+      <li>Don't install a graphical stack on a machine that doesn't need one.</li>
+      <li>Don't enable services merely because another installation profile might use them.</li>
+      <li>Don't put development tools in every base installation.</li>
+      <li>Don't duplicate infrastructure Debian already maintains effectively.</li>
+      <li>Don't make optional software part of the core operating system.</li>
+    </ul>
+
+    <p>
+      The result is a smaller image, fewer default packages, fewer active
+      services, reduced storage requirements, and a system with fewer
+      components to understand and maintain.
+    </p>
+
+    <blockquote>
+      Minimal by default. Expandable by design.
+    </blockquote>
+  </section>
+
+
+  <section>
+    <h2>GNU Hurd</h2>
+
+    <p>
+      Linux is MiniMage's primary platform, but MiniMage is also being used
+      to explore an experimental <strong>GNU Hurd edition</strong>.
+    </p>
+
+    <p>
+      GNU Hurd differs substantially from Linux. Instead of a conventional
+      monolithic Linux kernel, Hurd operates using GNU Mach and a collection
+      of userspace servers.
+    </p>
+
+    <p>
+      MiniMage Hurd is intended to investigate how much of MiniMage's
+      package-management interface, userspace configuration, installer
+      concepts, package selection, and overall philosophy can remain
+      independent of Linux itself.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <strong>MiniMage Linux</strong>
+        <span>MiniMage → Debian userspace → Linux</span>
+      </div>
+
+      <div class="card">
+        <strong>MiniMage Hurd</strong>
+        <span>MiniMage → Debian GNU → Hurd → GNU Mach</span>
+      </div>
+    </div>
+
+    <p>
+      The Hurd edition is experimental and is not intended to replace the
+      primary Linux edition.
+    </p>
+
+    <blockquote>
+      Linux is the platform. Hurd is the laboratory.
+    </blockquote>
+  </section>
+
+
+  <section>
+    <h2>Build Process</h2>
+
+    <p>
+      MiniMage images are generated through an automated build environment
+      using Debian's underlying image infrastructure together with
+      MiniMage-specific tooling.
+    </p>
+
+<pre><code>MiniMage source
+      ↓
+Package manifests
+      ↓
+MiniMage rootfs
+      ↓
+OpenRC + Mage
+      ↓
+Live environment
+      ↓
+Bootable ISO</code></pre>
+
+    <p>
+      Development images are tested from clean virtual disks to ensure that
+      an image can boot, install, configure OpenRC, install its bootloader,
+      reboot independently, establish networking, and perform package
+      operations through Mage.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>Project Architecture</h2>
+
+    <h3>Linux Edition</h3>
+
+<pre><code>Linux kernel
+    ↓
+OpenRC
+    ↓
+Debian-compatible userspace
+    ↓
+dpkg / APT
+    ↓
+Mage
+    ↓
+MiniMage configuration
+    ↓
+User environment</code></pre>
+
+    <h3>Experimental Hurd Edition</h3>
+
+<pre><code>GNU Mach
+    ↓
+GNU Hurd
+    ↓
+Debian GNU userspace
+    ↓
+dpkg / APT
+    ↓
+Mage
+    ↓
+MiniMage configuration
+    ↓
+User environment</code></pre>
+  </section>
+
+
+  <section>
+    <h2>Development Status</h2>
+
+    <div class="warning">
+      <strong>MiniMage is currently in private pre-release development.</strong>
+
+      <p style="margin-top: 12px; margin-bottom: 0;">
+        Development images and source repositories are not currently
+        available for public download. The build system, installer, Mage
+        package manager, OpenRC configuration, package manifests, filesystem
+        overlays, release tooling, and experimental Hurd work remain private
+        while the project's core architecture is stabilized.
+      </p>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>Technical Summary</h2>
+
+    <div class="specs">
+      <div class="spec-name">Distribution</div>
+      <div>MiniMage Linux</div>
+
+      <div class="spec-name">Upstream</div>
+      <div>Debian</div>
+
+      <div class="spec-name">Architecture</div>
+      <div>amd64 / x86_64</div>
+
+      <div class="spec-name">Kernel</div>
+      <div>Linux</div>
+
+      <div class="spec-name">Experimental</div>
+      <div>GNU Hurd / GNU Mach</div>
+
+      <div class="spec-name">Init</div>
+      <div>OpenRC</div>
+
+      <div class="spec-name">Package format</div>
+      <div>.deb</div>
+
+      <div class="spec-name">Package backend</div>
+      <div>dpkg / APT</div>
+
+      <div class="spec-name">Package interface</div>
+      <div>Mage</div>
+
+      <div class="spec-name">Default UI</div>
+      <div>TTY</div>
+
+      <div class="spec-name">Desktop</div>
+      <div>User selected</div>
+
+      <div class="spec-name">Status</div>
+      <div>Private pre-release</div>
+
+      <div class="spec-name">Source</div>
+      <div>Not currently public</div>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>The MiniMage Approach</h2>
+
+    <p>
+      MiniMage isn't trying to become independent simply for the sake of
+      being independent.
+    </p>
+
+    <p>
+      Debian already maintains an enormous software ecosystem. dpkg works.
+      Linux works. OpenRC works.
+    </p>
+
+    <p>
+      MiniMage builds around proven components and introduces new software
+      only where it serves the design of the distribution.
+    </p>
+
+    <p>
+      The goal is a system that is small enough to understand, complete
+      enough to use, flexible enough to rebuild, and experimental enough to
+      question its own assumptions.
+    </p>
+
+    <blockquote>
+      Start small. Add what you need. Understand what you run.
+    </blockquote>
+  </section>
+
+</main>
+
+<footer>
+  <div class="inner">
+    <strong>MiniMage Linux</strong><br>
+    Minimal by default. Expandable by design.
+  </div>
+</footer>
+
+</body>
+</html>
